@@ -33,15 +33,22 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
+    // 1) get shared instance of MNGMSInfoWindow & configure its appearecnce
     self.displayedInfoWindow = [MNGMSInfoWindow sharedInstance];
     [[self.displayedInfoWindow layer] setBorderWidth:1.0];
     [self.displayedInfoWindow setBackgroundColor:[[UIColor yellowColor] colorWithAlphaComponent:0.5]];
+    
+     // 2) design your content view with your UIContorls and set it as the content view of shared instance of MNGMSInfoWindow.
     [self.displayedInfoWindow setContentView:[self getContentView]];
 
+
+    // 3) show google map on your selv.view
     self.googleMapView = [GMSMapView mapWithFrame:self.view.frame camera:[GMSCameraPosition cameraWithTarget:CLLocationCoordinate2DMake(17.842222, 84.125545) zoom:7]];
     [self.googleMapView setDelegate:self];
     [self.view addSubview:self.googleMapView];
     
+    // 4) Add a couple of markers to show infow window
     GMSMarker *marker1 = [GMSMarker markerWithPosition:CLLocationCoordinate2DMake(17.842222, 84.125545)];
     [marker1 setIcon:[self getScaledImage:[GMSMarker markerImageWithColor:[UIColor greenColor]] scaledToSize:CGSizeMake(markerWidth, markerHeight)]];
     [marker1 setMap:self.googleMapView];
@@ -50,6 +57,8 @@
     [marker2 setIcon:[self getScaledImage:[GMSMarker markerImageWithColor:[UIColor redColor]] scaledToSize:CGSizeMake(markerWidth, markerHeight)]];
     [marker2 setMap:self.googleMapView];
 }
+
+// Implement GMSMapView's Delegates
 - (void)mapView:(GMSMapView *)mapView didChangeCameraPosition:(GMSCameraPosition *)position
 {
     if(self.currentlyTappedMarker)
@@ -73,9 +82,15 @@
     {
         self.currentlyTappedMarker = marker;
         CLLocationCoordinate2D mapCameraLoc = mapView.camera.target;
+        
+        // animate google map's camera is targeting to somewhere other than current selected marker only!
         if(CLCOORDINATES_EQUAL2(mapCameraLoc, marker.position) == false)
             [self.googleMapView animateToLocation:marker.position];
+            
+        // Get Tapped marker's coordinates from google map view
         CGPoint markerPoint = [self.googleMapView.projection pointForCoordinate:self.currentlyTappedMarker.position];
+        
+        // Caliculate and set frame for the custom infow Window
         [self.displayedInfoWindow setFrame:(CGRect){markerPoint.x - (infoWindowWidth / 2), markerPoint.y - (markerHeight + infoWindowHeight) , infoWindowWidth, infoWindowHeight}];
         [self.view addSubview:self.displayedInfoWindow];
         // Infow window was Shown
@@ -88,6 +103,9 @@
 }
 -(void)mapView:(GMSMapView *)mapView didTapAtCoordinate:(CLLocationCoordinate2D)coordinate
 {
+
+
+    // set frame for Custom infow window if there is any selected marker only.
     if(self.currentlyTappedMarker)
     {
         self.currentlyTappedMarker = nil;
@@ -99,6 +117,7 @@
 #pragma mark Helpers
 -(void)buttonActionHandler:(UIButton *)sender
 {
+    // Custom infow window subview's callbacks .
     if(self.currentlyTappedMarker) self.currentlyTappedMarker = nil;
     // Infow window was hidden
     // DO YOUR WORK .....
@@ -108,6 +127,7 @@
 }
 - (UIImage *)getScaledImage:(UIImage*)originalImage scaledToSize:(CGSize)size
 {
+    // resize your GMSMarker's Icon to your requires CGSize
     if (CGSizeEqualToSize(originalImage.size, size)) return originalImage;
     UIGraphicsBeginImageContextWithOptions(size, NO, 0.0f);
     [originalImage drawInRect:CGRectMake(0.0f, 0.0f, size.width, size.height)];
@@ -118,6 +138,7 @@
 
 -(MNGMSInfoWindowContentView *)getContentView
 {
+    // Design Your Custom Content View With needed UIControls 
     MNGMSInfoWindowContentView *contentV = [MNGMSInfoWindowContentView new];
     [contentV setFrame:(CGRect){5,5,infoWindowWidth - 10,infoWindowHeight - 10}];
     UIButton *button1 = [UIButton buttonWithType:UIButtonTypeSystem];
